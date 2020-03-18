@@ -20,8 +20,7 @@ function register(req, res, next) {
     if (error) {
       // Our register middleware failed
       console.error(error);
-      next(error);
-      return;
+      return next(error);
     }
     // Store user so we can access it in our handler
     req.user = user;
@@ -30,25 +29,29 @@ function register(req, res, next) {
   });
 }
 
-passport.use(
-  new LocalStrategy(
-    {
-      usernameField: "email",
-      passwordField: "password"
-    },
-    function(email, password, cb) {
-      //this one is typically a DB call. Assume that the returned user object is pre-formatted and ready for storing in JWT
-      return User.findOne({ email, password })
-        .then(user => {
-          if (!user) {
-            return cb(null, false, { message: "Incorrect email or password." });
-          }
-          return cb(null, user, { message: "Logged In Successfully" });
-        })
-        .catch(err => cb(err));
-    }
-  )
-);
+// passport.use(
+//   new LocalStrategy(
+//     {
+//       usernameField: "email",
+//       passwordField: "password"
+//     },
+//     function(email, password, cb) {
+//       console.log("login: ", email, password);
+//       //this one is typically a DB call. Assume that the returned user object is pre-formatted and ready for storing in JWT
+//       return User.findOne({ email, password })
+//         .then(user => {
+//           if (!user) {
+//             return cb(null, false, { message: "Incorrect email or password." });
+//           }
+//           return cb(null, user, { message: "Logged In Successfully" });
+//         })
+//         .catch(err => {
+//           console.log(err);
+//           return cb(err);
+//         });
+//     }
+//   )
+// );
 
 passport.use(
   new JWTStrategy(
@@ -75,7 +78,7 @@ passport.use(
   )
 );
 
-function signJWTForUser(req, res) {
+function signJWTForUser(req, res, next) {
   // Get the user (either just signed in or signed up)
   const user = req.user;
   // Create a signed token
@@ -87,13 +90,13 @@ function signJWTForUser(req, res) {
     // secret
     process.env.JWT_SECRET,
     {
-      algorithm: jwtAlgorithm,
-      expiresIn: jwtExpiresIn,
+      expiresIn: "7 days",
       subject: user._id.toString()
     }
   );
   // Send the token
-  res.json({ token });
+  req.token = token;
+  next();
 }
 
 module.exports = {

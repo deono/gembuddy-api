@@ -15,10 +15,15 @@ router.get("/", (req, res) => {
 // Register
 router.post(
   "/register",
-  // middleware that handles the registration process
-  authMiddleware.register,
-  // json handler
-  authMiddleware.signJWTForUser
+  [
+    // middleware that handles the registration process
+    authMiddleware.register,
+    // json handler
+    authMiddleware.signJWTForUser
+  ],
+  (req, res) => {
+    res.status(200).json({ message: "user registered", token: req.token });
+  }
 );
 
 module.exports = router;
